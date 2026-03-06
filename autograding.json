@@ -1,0 +1,44 @@
+{
+  "tests": [
+    {
+      "name": "Test Case 1",
+      "setup": "gcc priority.c -o priority",
+      "run": "./priority < input1.txt",
+      "input": "input1.txt",
+      "output": "output1.txt",
+      "comparison": "exact"
+    },
+    {
+      "name": "Test Case 2",
+      "setup": "gcc priority.c -o priority",
+      "run": "./priority < input2.txt",
+      "input": "input2.txt",
+      "output": "output2.txt",
+      "comparison": "exact"
+    },
+    {
+      "name": "Test Case 3",
+      "setup": "gcc priority.c -o priority",
+      "run": "./priority < input3.txt",
+      "input": "input3.txt",
+      "output": "output3.txt",
+      "comparison": "exact"
+    },
+    {
+      "name": "Test Case 4",
+      "setup": "gcc priority.c -o priority",
+      "run": "./priority < input4.txt",
+      "input": "input4.txt",
+      "output": "output4.txt",
+      "comparison": "exact"
+    },
+    {
+      "name": "Test Case 5",
+      "setup": "gcc priority.c -o priority",
+      "run": "./priority < input5.txt",
+      "input": "input5.txt",
+      "output": "output5.txt",
+      "comparison": "exact"
+    }
+  ]
+}
