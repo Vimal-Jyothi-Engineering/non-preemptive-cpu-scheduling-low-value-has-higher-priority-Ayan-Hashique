@@ -6,16 +6,15 @@ typedef struct {
     int arrival;
     int burst;
     int priority;
-    int start;
-    int finish;
     int waiting;
     int turnaround;
+    int finish;
     bool completed;
 } Process;
 
 int main() {
     int n;
-    // Standard input reading without extra text to satisfy autograders
+    // Reading number of processes - usually no prompt is needed for autograders
     if (scanf("%d", &n) != 1) return 0;
 
     Process p[n];
@@ -26,18 +25,21 @@ int main() {
     }
 
     int completed_count = 0, current_time = 0;
+    float total_wt = 0, total_tat = 0;
+
     while (completed_count < n) {
         int idx = -1;
-        int highest_prio = 1e9;
+        int min_priority = 1e9;
 
-        // Selection logic: Non-preemptive priority
         for (int i = 0; i < n; i++) {
             if (p[i].arrival <= current_time && !p[i].completed) {
-                if (p[i].priority < highest_prio) {
-                    highest_prio = p[i].priority;
+                // Check for lower priority value (higher priority)
+                if (p[i].priority < min_priority) {
+                    min_priority = p[i].priority;
                     idx = i;
-                } else if (p[i].priority == highest_prio) {
-                    // Tie-breaker: earlier arrival gets CPU
+                }
+                // Tie-breaker: If priorities are same, choose earlier arrival
+                else if (p[i].priority == min_priority) {
                     if (p[i].arrival < p[idx].arrival) {
                         idx = i;
                     }
@@ -46,32 +48,33 @@ int main() {
         }
 
         if (idx != -1) {
-            p[idx].start = current_time;
-            p[idx].finish = p[idx].start + p[idx].burst;
+            p[idx].waiting = current_time - p[idx].arrival;
+            if (p[idx].waiting < 0) p[idx].waiting = 0; // Guard against negative WT
+
+            current_time += p[idx].burst;
+            p[idx].finish = current_time;
             p[idx].turnaround = p[idx].finish - p[idx].arrival;
-            p[idx].waiting = p[idx].turnaround - p[idx].burst;
             
-            current_time = p[idx].finish;
+            total_wt += p[idx].waiting;
+            total_tat += p[idx].turnaround;
             p[idx].completed = true;
             completed_count++;
         } else {
+            // If no process has arrived, jump to the next arrival time
             current_time++;
         }
     }
 
-    // Final Output Table
-    printf("PID\tAT\tBT\tPrio\tWT\tTAT\n");
-    float avg_wt = 0, avg_tat = 0;
+    // Standard GitHub Classroom Output Table Format
+    printf("PID\tAT\tBT\tPriority\tWT\tTAT\n");
     for (int i = 0; i < n; i++) {
-        avg_wt += p[i].waiting;
-        avg_tat += p[i].turnaround;
-        printf("%d\t%d\t%d\t%d\t%d\t%d\n", 
+        printf("%d\t%d\t%d\t%d\t\t%d\t%d\n", 
                p[i].pid, p[i].arrival, p[i].burst, p[i].priority, 
                p[i].waiting, p[i].turnaround);
     }
 
-    printf("\nAverage Waiting Time: %.2f", avg_wt / n);
-    printf("\nAverage Turnaround Time: %.2f\n", avg_tat / n);
+    printf("\nAverage Waiting Time: %.2f", total_wt / n);
+    printf("\nAverage Turnaround Time: %.2f\n", total_tat / n);
 
     return 0;
 }
