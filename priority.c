@@ -1,67 +1,86 @@
-// priority.c
-// Non-preemptive Priority Scheduling
-// Lower priority value = higher priority
-
 #include <stdio.h>
+#include <stdbool.h>
 
-int main() {
-    int n = 5;
+typedef struct {
+    int pid;        // Process ID
+    int arrival;    // Arrival Time
+    int burst;      // Burst Time
+    int priority;   // Priority (Lower = Higher priority)
+    int start;      // Start Time
+    int finish;     // Completion Time
+    int waiting;    // Waiting Time
+    int turnaround; // Turnaround Time
+    bool completed; // Completion status
+} Process;
 
-    int pid[] = {1,2,3,4,5};
-    int bt[] = {10,1,2,1,5};
-    int pr[] = {3,1,4,5,2};
+void calculateMetrics(Process p[], int n) {
+    int completed_count = 0, current_time = 0;
+    
+    while (completed_count < n) {
+        int idx = -1;
+        int highest_priority = 1e9; // Infinity equivalent
 
-    int wt[5], tat[5];
-
-    int i,j;
-
-    // Sort processes by priority
-    for(i=0;i<n-1;i++) {
-        for(j=i+1;j<n;j++) {
-            if(pr[i] > pr[j]) {
-
-                int temp;
-
-                temp = pr[i];
-                pr[i] = pr[j];
-                pr[j] = temp;
-
-                temp = bt[i];
-                bt[i] = bt[j];
-                bt[j] = temp;
-
-                temp = pid[i];
-                pid[i] = pid[j];
-                pid[j] = temp;
+        // Find process with highest priority that has arrived and isn't finished
+        for (int i = 0; i < n; i++) {
+            if (p[i].arrival <= current_time && !p[i].completed) {
+                if (p[i].priority < highest_priority) {
+                    highest_priority = p[i].priority;
+                    idx = i;
+                }
+                // Tie-breaker: If priorities are equal, use Arrival Time (FCFS)
+                else if (p[i].priority == highest_priority) {
+                    if (p[i].arrival < p[idx].arrival) {
+                        idx = i;
+                    }
+                }
             }
         }
+
+        if (idx != -1) {
+            p[idx].start = current_time;
+            p[idx].finish = p[idx].start + p[idx].burst;
+            p[idx].turnaround = p[idx].finish - p[idx].arrival;
+            p[idx].waiting = p[idx].turnaround - p[idx].burst;
+            
+            current_time = p[idx].finish;
+            p[idx].completed = true;
+            completed_count++;
+        } else {
+            // No process has arrived yet, jump time forward
+            current_time++;
+        }
+    }
+}
+
+void displayResults(Process p[], int n) {
+    float total_wt = 0, total_tat = 0;
+    printf("\nPID\tArrival\tBurst\tPriority\tFinish\tWaiting\tTurnaround\n");
+    for (int i = 0; i < n; i++) {
+        total_wt += p[i].waiting;
+        total_tat += p[i].turnaround;
+        printf("%d\t%d\t%d\t%d\t\t%d\t%d\t%d\n", 
+               p[i].pid, p[i].arrival, p[i].burst, p[i].priority, 
+               p[i].finish, p[i].waiting, p[i].turnaround);
+    }
+    printf("\nAverage Waiting Time: %.2f", total_wt / n);
+    printf("\nAverage Turnaround Time: %.2f\n", total_tat / n);
+}
+
+int main() {
+    int n;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+
+    Process p[n];
+    for (int i = 0; i < n; i++) {
+        p[i].pid = i + 1;
+        printf("Process %d [Arrival Burst Priority]: ", i + 1);
+        scanf("%d %d %d", &p[i].arrival, &p[i].burst, &p[i].priority);
+        p[i].completed = false;
     }
 
-    // Waiting time
-    wt[0] = 0;
-    for(i=1;i<n;i++) {
-        wt[i] = wt[i-1] + bt[i-1];
-    }
-
-    // Turnaround time
-    for(i=0;i<n;i++) {
-        tat[i] = wt[i] + bt[i];
-    }
-
-    float avg_wt = 0, avg_tat = 0;
-
-    printf("Process\tPriority\tBurst Time\tWaiting Time\tTurnaround Time\n");
-
-    for(i=0;i<n;i++) {
-        printf("P%d\t%d\t\t%d\t\t%d\t\t%d\n",
-               pid[i], pr[i], bt[i], wt[i], tat[i]);
-
-        avg_wt += wt[i];
-        avg_tat += tat[i];
-    }
-
-    printf("\nAverage Waiting Time = %.2f", avg_wt/n);
-    printf("\nAverage Turnaround Time = %.2f\n", avg_tat/n);
+    calculateMetrics(p, n);
+    displayResults(p, n);
 
     return 0;
 }
