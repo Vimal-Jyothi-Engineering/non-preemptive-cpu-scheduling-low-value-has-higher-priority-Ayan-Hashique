@@ -1,48 +1,66 @@
+// priority.c
+// Non-Preemptive Priority CPU Scheduling
+// Lower priority value = Higher priority
+
 #include <stdio.h>
-#include <string.h>
-
-#define MAX 100
-
-typedef struct {
-    char pid[10];
-    int at;   // Arrival Time
-    int bt;   // Burst Time
-    int pr;   // Priority
-    int wt;   // Waiting Time
-    int tat;  // Turnaround Time
-    int ct;   // Completion Time
-    int done; // 0 = not finished, 1 = finished
-} Process;
 
 int main() {
-    int n;
-    Process p[MAX];
+    int n = 5;
 
-    scanf("%d", &n);
+    int process[] = {1,2,3,4,5};
+    int burst_time[] = {10,1,2,1,5};
+    int priority[] = {3,1,4,5,2};
 
-    for (int i = 0; i < n; i++) {
-        scanf("%s %d %d %d", p[i].pid, &p[i].at, &p[i].bt, &p[i].pr);
-        p[i].done = 0;
+    int waiting_time[5], turnaround_time[5];
+
+    int i,j,temp;
+
+    // Sorting processes based on priority
+    for(i=0;i<n-1;i++) {
+        for(j=i+1;j<n;j++) {
+            if(priority[i] > priority[j]) {
+
+                temp = priority[i];
+                priority[i] = priority[j];
+                priority[j] = temp;
+
+                temp = burst_time[i];
+                burst_time[i] = burst_time[j];
+                burst_time[j] = temp;
+
+                temp = process[i];
+                process[i] = process[j];
+                process[j] = temp;
+            }
+        }
     }
 
-   ..
-     ..
-     ..
-     ..
-     ..
-     ..
-     ...
-     ...
-    printf("Waiting Time:\n");
-    for (int i = 0; i < n; i++)
-        printf("%s %d\n", p[i].pid, p[i].wt);
+    // Waiting time calculation
+    waiting_time[0] = 0;
 
-    printf("Turnaround Time:\n");
-    for (int i = 0; i < n; i++)
-        printf("%s %d\n", p[i].pid, p[i].tat);
+    for(i=1;i<n;i++) {
+        waiting_time[i] = waiting_time[i-1] + burst_time[i-1];
+    }
 
-    printf("Average Waiting Time: %.2f\n", total_wt / n);
-    printf("Average Turnaround Time: %.2f\n", total_tat / n);
+    // Turnaround time calculation
+    for(i=0;i<n;i++) {
+        turnaround_time[i] = waiting_time[i] + burst_time[i];
+    }
+
+    float avg_wt = 0, avg_tat = 0;
+
+    printf("Process\tPriority\tBurst Time\tWaiting Time\tTurnaround Time\n");
+
+    for(i=0;i<n;i++) {
+        printf("P%d\t%d\t\t%d\t\t%d\t\t%d\n",
+        process[i], priority[i], burst_time[i], waiting_time[i], turnaround_time[i]);
+
+        avg_wt += waiting_time[i];
+        avg_tat += turnaround_time[i];
+    }
+
+    printf("\nAverage Waiting Time: %.2f", avg_wt/n);
+    printf("\nAverage Turnaround Time: %.2f\n", avg_tat/n);
 
     return 0;
 }
